@@ -2,6 +2,7 @@ package br.com.fiap.githubapp
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import br.com.fiap.githubapp.api.GithubService
 import br.com.fiap.githubapp.model.Usuario
@@ -13,8 +14,8 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import com.facebook.stetho.okhttp3.StethoInterceptor
+import kotlinx.android.synthetic.main.include_loading.*
 import okhttp3.OkHttpClient
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -25,26 +26,33 @@ class MainActivity : AppCompatActivity() {
 
         btBuscar.setOnClickListener {
 
+            showLoading()
+
             val retrofit = Retrofit.Builder()
                 .baseUrl("https://api.github.com/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .client(
                     OkHttpClient.Builder()
                         .addNetworkInterceptor(StethoInterceptor())
-                        .build())
+                        .build()
+                )
                 .build()
 
             val service = retrofit.create(GithubService::class.java)
 
             service.pequisar(inputUsuario.text.toString())
                 .enqueue(object : Callback<Usuario> {
+
                     override fun onFailure(call: Call<Usuario>, t: Throwable) {
+                        hideLoading()
+
                         Toast.makeText(
                             this@MainActivity, t.message, Toast.LENGTH_LONG
                         ).show()
                     }
 
                     override fun onResponse(call: Call<Usuario>, response: Response<Usuario>) {
+                        hideLoading()
 
                         if (response.isSuccessful) {
 
@@ -56,20 +64,25 @@ class MainActivity : AppCompatActivity() {
                                 .load(usuario?.avatarURL)
                                 .into(ivUsuario)
 
+
+
                         } else {
                             Toast.makeText(
                                 this@MainActivity, "Não foi possivel realizar a operação", Toast.LENGTH_LONG
                             ).show()
-
                         }
-
-
                     }
                 })
-
-
         }
-
-
     }
+
+    private fun showLoading() {
+        containerLoading.visibility = View.VISIBLE
+    }
+
+    private fun hideLoading() {
+        containerLoading.visibility = View.GONE
+    }
+
+
 }
